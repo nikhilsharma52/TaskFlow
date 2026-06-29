@@ -1,5 +1,7 @@
 ﻿using TaskFlow;
 using TaskFlow.Enums;
+using TaskFlow.Exceptions;
+using TaskFlow.Extensions;
 using TaskFlow.Models;
 using TaskFlow.Repositories;
 
@@ -12,8 +14,11 @@ while (true)
     Console.WriteLine("1. Add Task");
     Console.WriteLine("2. List Tasks");
     Console.WriteLine("3. Complete Task");
-    Console.WriteLine("4. OOP");
-    Console.WriteLine("5. Exit");
+    Console.WriteLine("4. Search By Title");
+    Console.WriteLine("5. Filter By State");
+    Console.WriteLine("6. Status Report");
+    Console.WriteLine("7. OOP");
+    Console.WriteLine("0. Exit");
     Console.Write("Choose an option: ");
 
     string? input = Console.ReadLine();
@@ -30,9 +35,18 @@ while (true)
             CompleteTask();
             break;
         case "4":
-            OOPS();
+            SearchByTitle();
             break;
         case "5":
+            FilterByState();
+            break;
+        case "6":
+            ShowStatusReport();
+            break;
+        case "7":
+            OOPS();
+            break;
+        case "0":
             return;
         default:
             Console.WriteLine("Invalid option. Please try again.");
@@ -58,6 +72,7 @@ void AddTask()
         {
             Id = repository.GetAll().Count + 1,
             Title = title,
+            State = TaskState.Todo,
             IsDone = false
         };
         repository.Add(task);
@@ -77,11 +92,9 @@ void ListTasks()
         Console.WriteLine("No tasks available.");
         return;
     }
-    Console.WriteLine("Tasks:");
     foreach (var task in repository.GetAll())
     {
-        string status = task.IsDone ? "Done" : "Pending";
-        Console.WriteLine($"[{task.Id}] {task.Title} - {status}");
+        task.Display();
     }
 }
 
@@ -105,17 +118,94 @@ void CompleteTask()
 
     //var task = tasks.FirstOrDefault(t => t.Id == id);
 
-    TaskItem? task = repository.GetById(id);
-
-    if (task == null)
+    try
     {
-        Console.WriteLine("Task not found.");
+        TaskItem? task = repository.GetById(id);
+
+        if (task == null) throw new TaskNotFoundException(id);
+
+        task.IsDone = true;
+        task.State = TaskState.Done;
+        repository.Update(task);
+        Console.WriteLine("Task Completed.");
+    }
+    catch (TaskNotFoundException ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+}
+
+void SearchByTitle()
+{
+    Console.WriteLine("Enter title to Search: ");
+    string? title = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(title)) return;
+
+    List<TaskItem> tasks = repository.SearchByTitle(title);
+
+    if(tasks.Count == 0)
+    {
+        Console.WriteLine("No matching tasks found.");
         return;
     }
-    task.IsDone = true;
-    task.State = TaskState.Done;
-    repository.Update(task);
-    Console.WriteLine("Task Completed.");
+
+    foreach(TaskItem task in tasks) 
+    {
+        task.Display();
+    }
+}
+
+void FilterByState()
+{
+    Console.WriteLine("1. Todo");
+    Console.WriteLine("2. InProgress");
+    Console.WriteLine("3. Done");
+
+    Console.WriteLine("Choose State: ");
+
+    string? input = Console.ReadLine();
+
+    TaskState state;
+
+    switch (input)
+    {
+        case "1":
+            state = TaskState.Todo;
+            break;
+        case "2":
+            state = TaskState.InProgress;
+            break;
+        case "3":
+            state = TaskState.Done;
+            break;
+        default:
+            Console.WriteLine("Invalid option.");
+            return;
+    }
+
+    List<TaskItem> tasks = repository.GetByState(state);
+
+    if (tasks.Count == 0)
+    {
+        Console.WriteLine("No tasks found.");
+        return;
+    }
+
+    foreach(TaskItem task in tasks)
+    {
+        task.Display();
+    }
+}
+
+void ShowStatusReport()
+{
+    Dictionary<TaskState, int> report = repository.GetStatusReport();
+    Console.WriteLine("Status Report:");
+    foreach (var item in report)
+    {
+        Console.WriteLine($"{item.Key}: {item.Value}");
+    }
 }
 
 void OOPS()

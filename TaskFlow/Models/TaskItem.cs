@@ -17,7 +17,7 @@ namespace TaskFlow.Models
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw new AggregateException("Title cannot be empty");
+                    throw new ArgumentException("Title cannot be empty");
                 }
 
                 _title = value;

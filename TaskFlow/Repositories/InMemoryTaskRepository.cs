@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TaskFlow.Enums;
 using TaskFlow.Models;
 
 namespace TaskFlow.Repositories
@@ -39,5 +40,19 @@ namespace TaskFlow.Repositories
                 _tasks.Remove(task);
             }
         }
+        public List<TaskItem> SearchByTitle(string title)
+        {
+            return _tasks.Where(t => t.Title.Contains(title, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        public List<TaskItem> GetByState(TaskState state)
+        {
+            return _tasks.Where(t => t.State == state).ToList();
+        }
+        public Dictionary<TaskState, int> GetStatusReport()
+        {
+            return _tasks.GroupBy(t => t.State)
+                         .ToDictionary(g => g.Key, g => g.Count());
+        }
+
     }
 }
