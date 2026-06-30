@@ -6,7 +6,7 @@ namespace TaskFlow.Exceptions
 {
     public class TaskNotFoundException : Exception
     {
-        public TaskNotFoundException(int id) : base($"Task with ID {id} was nto found.")
+        public TaskNotFoundException(int id) : base($"Task with ID {id} was not found.")
         {
         }
     }

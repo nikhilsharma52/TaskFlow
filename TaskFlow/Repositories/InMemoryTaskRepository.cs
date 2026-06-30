@@ -1,57 +1,99 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Text;
+using System.Text.Json;
 using TaskFlow.Enums;
+using TaskFlow.Exceptions;
 using TaskFlow.Models;
 
 namespace TaskFlow.Repositories
 {
     public class InMemoryTaskRepository : ITaskRepository
     {
-        private readonly List<TaskItem> _tasks = new();
-        public void Add(TaskItem task)
+        private List<TaskItem> _tasks;
+        private readonly string _filePath = "Data/tasks.json";
+
+        public InMemoryTaskRepository()
+        {
+            Console.WriteLine($"Using File: {Path.GetFullPath(_filePath)}");
+            if(!Directory.Exists("Data"))
+            {
+                Directory.CreateDirectory("Data");
+            }
+            if (!File.Exists(_filePath))
+            {
+                File.WriteAllText(_filePath, "[]");
+            }
+
+            string json = File.ReadAllText(_filePath);
+            _tasks = JsonSerializer.Deserialize<List<TaskItem>>(json) ?? new List<TaskItem>();
+        }
+
+        private async Task SaveTasksAsync()
+        {
+            string json = JsonSerializer.Serialize(_tasks, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(_filePath, json);
+        }
+
+        public async Task AddAsync(TaskItem task)
         {
             _tasks.Add(task);
+            await SaveTasksAsync();
         }
-        public List<TaskItem> GetAll()
+        public async Task<List<TaskItem>> GetAllAsync()
         {
-            return _tasks;
+            return await Task.FromResult(_tasks);
         }
-        public TaskItem? GetById(int id)
+        public async Task<TaskItem?> GetByIdAsync(int id)
         {
-            return _tasks.Find(t => t.Id == id);
+            TaskItem? task = _tasks.Find(t => t.Id == id);
+            return await Task.FromResult(task);
         }
-        public void Update(TaskItem updatedtask)
+        public async Task UpdateAsync(TaskItem updatedtask)
         {
-            TaskItem? task = GetById(updatedtask.Id);
+            TaskItem? task = await GetByIdAsync(updatedtask.Id);
 
             if (task != null)
             {
-                task.Title = updatedtask.Title;
-                task.IsDone = updatedtask.IsDone;
-                task.State = updatedtask.State;
+                throw new TaskNotFoundException(updatedtask.Id);
             }
+
+            task.Title = updatedtask.Title;
+            task.IsDone = updatedtask.IsDone;
+            task.State = updatedtask.State;
+
+            await SaveTasksAsync();
         }
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            TaskItem? task = GetById(id);
+            TaskItem? task = await GetByIdAsync(id);
             if (task != null)
             {
-                _tasks.Remove(task);
+                throw new TaskNotFoundException(id);
             }
+
+            _tasks.Remove(task);
+            await SaveTasksAsync();
         }
-        public List<TaskItem> SearchByTitle(string title)
+
+        public async Task<List<TaskItem>> SearchByTitleAsync(string title)
         {
-            return _tasks.Where(t => t.Title.Contains(title, StringComparison.OrdinalIgnoreCase)).ToList();
+            List<TaskItem> result = _tasks.Where(t => t.Title.Contains(title, StringComparison.OrdinalIgnoreCase)).ToList();
+            return await Task.FromResult(result);
+
         }
-        public List<TaskItem> GetByState(TaskState state)
+
+        public async Task<List<TaskItem>> GetByStateAsync(TaskState state)
         {
-            return _tasks.Where(t => t.State == state).ToList();
+            List<TaskItem> result = _tasks.Where(t => t.State == state).ToList();
+            return await Task.FromResult(result);
         }
-        public Dictionary<TaskState, int> GetStatusReport()
+
+        public async Task<Dictionary<TaskState, int>> GetStatusReportAsync()
         {
-            return _tasks.GroupBy(t => t.State)
-                         .ToDictionary(g => g.Key, g => g.Count());
+            Dictionary<TaskState, int> report = _tasks.GroupBy(t => t.State).ToDictionary(g => g.Key, g => g.Count());
+            return await Task.FromResult(report);
         }
 
     }

@@ -8,14 +8,14 @@ namespace TaskFlow.Repositories
 {
     public interface ITaskRepository
     {
-        void Add(TaskItem task);
-        List<TaskItem> GetAll();
-        TaskItem? GetById(int id);
-        void Update(TaskItem task);
-        void Delete(int id);
-        List<TaskItem> SearchByTitle(string title);
-        List<TaskItem> GetByState(TaskState state);
-        Dictionary<TaskState, int> GetStatusReport();
+        Task AddAsync(TaskItem task);
+        Task<List<TaskItem>> GetAllAsync();
+        Task<TaskItem?> GetByIdAsync(int id);
+        Task UpdateAsync(TaskItem task);
+        Task DeleteAsync(int id);
+        Task<List<TaskItem>> SearchByTitleAsync(string title);
+        Task<List<TaskItem>> GetByStateAsync(TaskState state);
+        Task<Dictionary<TaskState, int>> GetStatusReportAsync();
 
     }
 }
