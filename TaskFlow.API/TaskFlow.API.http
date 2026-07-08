@@ -1,0 +1,36 @@
+@rootURL = http://localhost:5109
+
+GET {{rootURL}}/api/Project/
+Accept: application/json
+
+###
+
+GET {{rootURL}}/api/Project/2
+Accept: application/json
+
+###
+
+GET {{rootURL}}/api/Project/search?name=Library
+Accept: application/json
+
+###
+
+POST {{rootURL}}/api/Project/
+Content-Type: application/json
+{
+  "Name": "Ticket Management System",
+  "Description": "A system to manage tickets for customer support."
+}
+
+###
+
+PUT {{rootURL}}/api/Project/3
+Content-Type: application/json
+{
+  "Name": "Ticket Management System",
+  "Description": "An updated system to manage tickets for customer support."
+}
+
+###
+
+DELETE {{rootURL}}/api/Project/2

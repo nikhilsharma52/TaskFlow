@@ -97,6 +97,9 @@ namespace TaskFlow
                     Console.WriteLine("No tasks available.");
                     return;
                 }
+
+                Console.WriteLine("Tasks: ");
+
                 foreach (var task in tasks)
                 {
                     task.Display();

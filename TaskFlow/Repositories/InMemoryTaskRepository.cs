@@ -16,7 +16,6 @@ namespace TaskFlow.Repositories
 
         public InMemoryTaskRepository()
         {
-            Console.WriteLine($"Using File: {Path.GetFullPath(_filePath)}");
             if(!Directory.Exists("Data"))
             {
                 Directory.CreateDirectory("Data");
