@@ -14,5 +14,7 @@ namespace TaskFlow.API.DTOs
         [Required]
         [StringLength(300)]
         public string Description { get; set; } = string.Empty;
+
+        public bool IsCompleted { get; set; }
     }
 }

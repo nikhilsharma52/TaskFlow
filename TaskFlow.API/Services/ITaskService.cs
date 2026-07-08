@@ -7,7 +7,7 @@ namespace TaskFlow.API.Services
         List<TaskItem> GetAll();
         TaskItem? GetById(int id);
         TaskItem Create(TaskItem task);
-        bool update (int id, TaskItem task);
-        bool delete (int id);
+        bool Update(int id, TaskItem task);
+        bool Delete(int id);
     }
 }

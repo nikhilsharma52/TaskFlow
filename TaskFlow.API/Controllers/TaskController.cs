@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TaskFlow.API.DTOs;
 using TaskFlow.API.Models;
+using TaskFlow.API.Services;
 
 namespace TaskFlow.API.Controllers
 {
@@ -8,28 +9,17 @@ namespace TaskFlow.API.Controllers
     [Route("api/[controller]")]
     public class TaskController : ControllerBase
     {
-        private static List<TaskItem> tasks = new ()
+        private readonly ITaskService _taskService;
+
+        public TaskController(ITaskService taskService)
         {
-            new()
-            {
-                TaskId = 1,
-                ProjectId = 1,
-                Title = "Learn Controllers",
-                Description = "Complete Day 11."
-            },
-            new()
-            {
-                TaskId = 2,
-                ProjectId = 1,
-                Title = "Learn DTOs",
-                Description = "Complete Day 12."
-            }
-        };
+            _taskService = taskService;
+        }
 
         [HttpGet]
         public IActionResult GetTasks()
         {
-            var response = tasks.Select(task => new TaskResponseDto
+            var response = _taskService.GetAll().Select(task => new TaskResponseDto
             {
                 TaskId = task.TaskId,
                 ProjectId = task.ProjectId,
@@ -43,7 +33,7 @@ namespace TaskFlow.API.Controllers
         [HttpGet("{id}")]
         public IActionResult GetTaskById([FromRoute] int id)
         {
-            var task = tasks.FirstOrDefault(t => t.TaskId == id);
+            var task = _taskService.GetById(id);
 
             if (task == null) return NotFound();
 
@@ -59,45 +49,47 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateProject([FromBody] CreateTaskDto dto)
+        public IActionResult CreateTask([FromBody] CreateTaskDto dto)
         {
             var task = new TaskItem
             {
-                TaskId = tasks.Max(t => t.TaskId) + 1,
-                ProjectId = tasks.Max(p => p.ProjectId) + 1,
+                ProjectId = dto.ProjectId,
                 Title = dto.Title,
-                Description = dto.Description
+                Description = dto.Description,
+                IsCompleted = false
             };
 
-            tasks.Add(task);
+            var createdTask = _taskService.Create(task);
 
             var response = new TaskResponseDto
             {
+                TaskId = createdTask.TaskId,
                 ProjectId = task.ProjectId,
                 Title = task.Title,
                 Description = task.Description
             };
 
-            return CreatedAtAction(nameof(GetTaskById), new { id = task.TaskId }, response);
+            return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.TaskId }, response);
         }
 
         [HttpPut("{id}")]
         public IActionResult UpdateTask(int id, [FromBody] UpdateTaskDto dto)
         {
-            var task = tasks.FirstOrDefault(p => p.ProjectId == id);
+            var existingTask = _taskService.GetById(id);
 
-            if (task == null) return NotFound();
+            if (existingTask == null) return NotFound();
 
-            task.ProjectId = dto.ProjectId;
-            task.Title = dto.Title;
-            task.Description = dto.Description;
+            existingTask.ProjectId = dto.ProjectId;
+            existingTask.Title = dto.Title;
+            existingTask.Description = dto.Description;
+            existingTask.IsCompleted = dto.IsCompleted;
 
             var response = new TaskResponseDto
             {
-                TaskId = task.TaskId,
-                ProjectId = task.ProjectId,
-                Title = task.Title,
-                Description = task.Description
+                TaskId = existingTask.TaskId,
+                ProjectId = existingTask.ProjectId,
+                Title = existingTask.Title,
+                Description = existingTask.Description
             };
 
             return Ok(response);
@@ -106,11 +98,10 @@ namespace TaskFlow.API.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteTask(int id)
         {
-            var task = tasks.FirstOrDefault(p => p.TaskId == id);
+            var deleted = _taskService.Delete(id);
 
-            if (task == null) return NotFound();
+            if (!deleted) return NotFound();
 
-            tasks.Remove(task);
             return NoContent();
         }
     }

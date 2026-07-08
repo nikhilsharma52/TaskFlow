@@ -1,6 +1,5 @@
-﻿namespace TaskFlow
+﻿namespace TaskFlow.Concepts
 {
-
     public class Hammer
     {
         public void Use()
@@ -22,6 +21,7 @@
         private Hammer _hammer;
         private Saw _saw;
 
+        // Dependency Injection through constructor
         public Builder(Hammer hammer, Saw saw)
         {
             _hammer = hammer;
