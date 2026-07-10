@@ -1,50 +1,45 @@
-﻿using Microsoft.Identity.Client;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskFlow.API.Data;
 using TaskFlow.API.Models;
 
 namespace TaskFlow.API.Services
 {
     public class TaskService : ITaskService
     {
-        public static List<TaskItem> tasks = new()
-        {
-            new()
-            {
-                TaskId = 1,
-                ProjectId = 1,
-                Title = "Learn Controllers",
-                Description = "Need to learn Controllers and implement them",
-                IsCompleted = false
-            },
-            new()
-            {
-                TaskId = 2,
-                ProjectId = 1,
-                Title = "Learn DTOs",
-                Description = "Need to learn dtos to impleted it",
-                IsCompleted = false
-            }
-        };
 
-        public List<TaskItem> GetAll()
+        private readonly TaskFlowDbContext _context;
+
+        public TaskService(TaskFlowDbContext context)
         {
-            return tasks;
+            _context = context;
         }
 
-        public TaskItem? GetById(int id)
+
+
+        public async Task<List<TaskItem>> GetAllAsync()
         {
-            return tasks.FirstOrDefault(t => t.TaskId == id);
+            return await _context.Tasks
+                .AsNoTracking()
+                .ToListAsync();
         }
 
-        public TaskItem Create(TaskItem task)
+        public async Task<TaskItem?> GetByIdAsync(int id)
         {
-            task.TaskId = tasks.Max(t => t.TaskId) + 1;
-            tasks.Add(task);
+            return await _context.Tasks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TaskId == id);
+        }
+
+        public async Task<TaskItem> CreateAsync(TaskItem task)
+        {
+            _context.Tasks.Add(task);
+            await _context.SaveChangesAsync();
             return task;
         }
 
-        public bool Update(int id, TaskItem task)
+        public async Task<bool> UpdateAsync(int id, TaskItem task)
         {
-            var existingTask = tasks.FirstOrDefault(t => t.TaskId == id);
+            var existingTask = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == id);
             if (existingTask == null)
             {
                 return false;
@@ -53,17 +48,21 @@ namespace TaskFlow.API.Services
             existingTask.Title = task.Title;
             existingTask.Description = task.Description;
             existingTask.IsCompleted = task.IsCompleted;
+
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        public bool Delete(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var task = tasks.FirstOrDefault(t => t.TaskId == id);
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == id);
             if (task == null)
             {
                 return false;
             }
-            tasks.Remove(task);
+
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
             return true;
         }
     }

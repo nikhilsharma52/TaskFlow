@@ -10,6 +10,8 @@ namespace TaskFlow.API.Models
         [Required]
         public int ProjectId { get; set; }
 
+        public Project? Project { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Title { get; set; } = string.Empty;

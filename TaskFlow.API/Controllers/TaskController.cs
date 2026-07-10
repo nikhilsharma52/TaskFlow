@@ -17,9 +17,10 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetTasks()
+        public async Task<IActionResult> GetTasks()
         {
-            var response = _taskService.GetAll().Select(task => new TaskResponseDto
+            var tasks = await _taskService.GetAllAsync();
+            var response = tasks.Select(task => new TaskResponseDto
             {
                 TaskId = task.TaskId,
                 ProjectId = task.ProjectId,
@@ -31,9 +32,9 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetTaskById([FromRoute] int id)
+        public async Task<IActionResult> GetTaskById([FromRoute] int id)
         {
-            var task = _taskService.GetById(id);
+            var task = await _taskService.GetByIdAsync(id);
 
             if (task == null) return NotFound();
 
@@ -49,7 +50,7 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateTask([FromBody] CreateTaskDto dto)
+        public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
         {
             var task = new TaskItem
             {
@@ -59,7 +60,7 @@ namespace TaskFlow.API.Controllers
                 IsCompleted = false
             };
 
-            var createdTask = _taskService.Create(task);
+            var createdTask = await _taskService.CreateAsync(task);
 
             var response = new TaskResponseDto
             {
@@ -73,9 +74,9 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateTask(int id, [FromBody] UpdateTaskDto dto)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto dto)
         {
-            var existingTask = _taskService.GetById(id);
+            var existingTask = await _taskService.GetByIdAsync(id);
 
             if (existingTask == null) return NotFound();
 
@@ -83,6 +84,10 @@ namespace TaskFlow.API.Controllers
             existingTask.Title = dto.Title;
             existingTask.Description = dto.Description;
             existingTask.IsCompleted = dto.IsCompleted;
+
+            var updated = await _taskService.UpdateAsync(id, existingTask);
+
+            if(!updated) return NotFound();
 
             var response = new TaskResponseDto
             {
@@ -96,9 +101,9 @@ namespace TaskFlow.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteTask(int id)
+        public async Task<IActionResult> DeleteTask(int id)
         {
-            var deleted = _taskService.Delete(id);
+            var deleted = await _taskService.DeleteAsync(id);
 
             if (!deleted) return NotFound();
 

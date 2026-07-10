@@ -14,5 +14,7 @@ namespace TaskFlow.API.Models
         [Required]
         [StringLength (200)]
         public string Description { get; set; } = string.Empty;
+
+        public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     }
 }

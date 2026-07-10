@@ -31,6 +31,11 @@ namespace TaskFlow.API.Data
                 .HasMaxLength(200)
                 .IsRequired();
 
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Tasks)
+                .WithOne(t => t.Project)
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
