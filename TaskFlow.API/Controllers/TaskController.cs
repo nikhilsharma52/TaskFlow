@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using TaskFlow.API.DTOs;
 using TaskFlow.API.Models;
 using TaskFlow.API.Services;
@@ -10,23 +11,19 @@ namespace TaskFlow.API.Controllers
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;
+        private readonly IMapper _mapper;
 
-        public TaskController(ITaskService taskService)
+        public TaskController(ITaskService taskService, IMapper mapper)
         {
             _taskService = taskService;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetTasks()
         {
             var tasks = await _taskService.GetAllAsync();
-            var response = tasks.Select(task => new TaskResponseDto
-            {
-                TaskId = task.TaskId,
-                ProjectId = task.ProjectId,
-                Title = task.Title,
-                Description = task.Description
-            });
+            var response = _mapper.Map<IEnumerable<TaskResponseDto>>(tasks);
 
             return Ok(response);
         }
@@ -38,13 +35,7 @@ namespace TaskFlow.API.Controllers
 
             if (task == null) return NotFound();
 
-            var response = new TaskResponseDto
-            {
-                TaskId= task.TaskId,
-                ProjectId = task.ProjectId,
-                Title = task.Title,
-                Description = task.Description
-            };
+            var response = _mapper.Map<TaskResponseDto>(task);
 
             return Ok(response);
         }
@@ -52,23 +43,12 @@ namespace TaskFlow.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
         {
-            var task = new TaskItem
-            {
-                ProjectId = dto.ProjectId,
-                Title = dto.Title,
-                Description = dto.Description,
-                IsCompleted = false
-            };
+            var task = _mapper.Map<TaskItem>(dto);
+            task.IsCompleted = false;
 
             var createdTask = await _taskService.CreateAsync(task);
 
-            var response = new TaskResponseDto
-            {
-                TaskId = createdTask.TaskId,
-                ProjectId = task.ProjectId,
-                Title = task.Title,
-                Description = task.Description
-            };
+            var response = _mapper.Map<TaskResponseDto>(createdTask);
 
             return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.TaskId }, response);
         }
@@ -77,25 +57,13 @@ namespace TaskFlow.API.Controllers
         public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto dto)
         {
             var existingTask = await _taskService.GetByIdAsync(id);
-
             if (existingTask == null) return NotFound();
 
-            existingTask.ProjectId = dto.ProjectId;
-            existingTask.Title = dto.Title;
-            existingTask.Description = dto.Description;
-            existingTask.IsCompleted = dto.IsCompleted;
-
+            _mapper.Map(dto, existingTask);
             var updated = await _taskService.UpdateAsync(id, existingTask);
 
             if(!updated) return NotFound();
-
-            var response = new TaskResponseDto
-            {
-                TaskId = existingTask.TaskId,
-                ProjectId = existingTask.ProjectId,
-                Title = existingTask.Title,
-                Description = existingTask.Description
-            };
+            var response = _mapper.Map<TaskResponseDto>(existingTask);
 
             return Ok(response);
         }

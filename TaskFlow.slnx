@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="TaskFlow.API/TaskFlow.API.csproj" Id="38bd70f1-dd9f-4b58-b58f-04a9e8c68cb1" />
   <Project Path="TaskFlow/TaskFlow.csproj" />
 </Solution>
