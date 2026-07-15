@@ -18,12 +18,28 @@ namespace TaskFlow.API.Services
         }
         public async Task<List<Project>> GetAllAsync()
         {
-            return (await _repository.GetAllAsync()).ToList();
+            if(_currentUserService.Role == "Admin")
+            {
+                return (await _repository.GetAllAsync()).ToList();
+            }
+            return (await _repository.FindAsync(p => p.OwnerUserId == _currentUserService.UserId)).ToList();
         }
 
         public async Task<Project?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var project = await _repository.GetByIdAsync(id);
+
+            if (project == null)
+            {
+                return null;
+            }
+
+            if (_currentUserService.Role != "Admin" && project.OwnerUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to view this project.");
+            }
+
+            return project;
         }
         public async Task<Project> CreateAsync(Project project)
         {
@@ -39,6 +55,12 @@ namespace TaskFlow.API.Services
             {
                 return false;
             }
+
+            if (_currentUserService.Role != "Admin" && project.OwnerUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to modify this project.");
+            }
+
             existingProject.Name = project.Name;
             existingProject.Description = project.Description;
 
@@ -49,12 +71,18 @@ namespace TaskFlow.API.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var task = await _repository.GetByIdAsync(id);
-            if (task == null)
+            var project = await _repository.GetByIdAsync(id);
+            if (project == null)
             {
                 return false;
             }
-            _repository.Delete(task);
+
+            if (_currentUserService.Role != "Admin" && project.OwnerUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to modify this project.");
+            }
+
+            _repository.Delete(project);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }

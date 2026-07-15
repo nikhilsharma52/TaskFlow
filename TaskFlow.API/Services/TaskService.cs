@@ -10,18 +10,24 @@ namespace TaskFlow.API.Services
 
         private readonly IRepository<TaskItem> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUserService;
 
-        public TaskService(IRepository<TaskItem> repository, IUnitOfWork unitOfWork)
+        public TaskService(IRepository<TaskItem> repository, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
         }
 
 
 
         public async Task<List<TaskItem>> GetAllAsync()
         {
-            return (await _repository.GetAllAsync()).ToList();
+            if (_currentUserService.Role == "Admin")
+            {
+                return (await _repository.GetAllAsync()).ToList();
+            }
+            return (await _repository.FindAsync(t => t.AssignedUserId == _currentUserService.UserId)).ToList();
 
             //return await _context.Tasks
             //    .AsNoTracking()
@@ -30,7 +36,18 @@ namespace TaskFlow.API.Services
 
         public async Task<TaskItem?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var task = await _repository.GetByIdAsync(id);
+            if (task == null)
+            {
+                return null;
+            }
+
+            if (_currentUserService.Role != "Admin" && task.AssignedUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to view this task.");
+            }
+
+            return task;
 
             //return await _context.Tasks
             //    .AsNoTracking()
@@ -55,6 +72,12 @@ namespace TaskFlow.API.Services
             {
                 return false;
             }
+
+            if (_currentUserService.Role != "Admin" && task.AssignedUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to modify this Task.");
+            }
+            
             existingTask.ProjectId = task.ProjectId;
             existingTask.Title = task.Title;
             existingTask.Description = task.Description;
@@ -81,10 +104,16 @@ namespace TaskFlow.API.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
+
             var task = await _repository.GetByIdAsync(id);
             if (task == null)
             {
                 return false;
+            }
+
+            if (_currentUserService.Role != "Admin" && task.AssignedUserId != _currentUserService.UserId)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to modify this Task.");
             }
             _repository.Delete(task);
             await _unitOfWork.SaveChangesAsync();
