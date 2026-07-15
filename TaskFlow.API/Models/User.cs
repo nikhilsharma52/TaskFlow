@@ -21,6 +21,10 @@ namespace TaskFlow.API.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public string Role { get; set; } = "User";
+
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
+
+        public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
     
     }
 }

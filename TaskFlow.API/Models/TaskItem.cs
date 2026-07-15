@@ -12,6 +12,10 @@ namespace TaskFlow.API.Models
 
         public Project? Project { get; set; }
 
+        public int AssignedUserId { get; set; }
+
+        public User? AssignedUser { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Title { get; set; } = string.Empty;

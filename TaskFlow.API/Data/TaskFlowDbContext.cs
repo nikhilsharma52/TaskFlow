@@ -40,6 +40,18 @@ namespace TaskFlow.API.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.OwnerUser)
+                .WithMany(u =>  u.Projects)
+                .HasForeignKey(p => p.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.AssignedUser)
+                .WithMany(u => u.AssignedTasks)
+                .HasForeignKey(t => t.AssignedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

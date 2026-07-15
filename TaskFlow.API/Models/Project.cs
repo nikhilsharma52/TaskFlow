@@ -15,6 +15,15 @@ namespace TaskFlow.API.Models
         [StringLength (200)]
         public string Description { get; set; } = string.Empty;
 
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        public int OwnerUserId { get; set; }
+
+        public User? OwnerUser { get; set; }
+
         public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+
+      
     }
 }
