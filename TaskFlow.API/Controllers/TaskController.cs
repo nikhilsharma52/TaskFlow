@@ -14,11 +14,14 @@ namespace TaskFlow.API.Controllers
     {
         private readonly ITaskService _taskService;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public TaskController(ITaskService taskService, IMapper mapper)
+
+        public TaskController(ITaskService taskService, IMapper mapper, ICurrentUserService currentUserService)
         {
             _taskService = taskService;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -47,6 +50,7 @@ namespace TaskFlow.API.Controllers
         {
             var task = _mapper.Map<TaskItem>(dto);
             task.IsCompleted = false;
+            task.AssignedUserId = _currentUserService.UserId;
 
             var createdTask = await _taskService.CreateAsync(task);
 

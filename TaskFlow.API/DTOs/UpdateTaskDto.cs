@@ -16,5 +16,8 @@ namespace TaskFlow.API.DTOs
         public string Description { get; set; } = string.Empty;
 
         public bool IsCompleted { get; set; }
+
+        //[Required]
+        //public int AssignedUserId { get; set; }
     }
 }

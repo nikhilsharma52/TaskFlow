@@ -15,5 +15,7 @@ namespace TaskFlow.API.DTOs
         [StringLength(300)]
         public string Description { get; set; } = string.Empty;
 
+        //public int AssignedUserId { get; set; }
+
     }
 }

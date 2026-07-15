@@ -15,11 +15,13 @@ namespace TaskFlow.API.Controllers
 
         private readonly IProjectService _projectService;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ProjectController(IProjectService projectService, IMapper mapper)
+        public ProjectController(IProjectService projectService, IMapper mapper, ICurrentUserService currentUserService)
         {
             _projectService = projectService;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -47,6 +49,8 @@ namespace TaskFlow.API.Controllers
         public async Task<IActionResult> CreateProject([FromBody]  CreateProjectDto dto)
         {
             var project = _mapper.Map<Project>(dto);
+
+            project.OwnerUserId = _currentUserService.UserId;
 
             var createdProject = await _projectService.CreateAsync(project);
 

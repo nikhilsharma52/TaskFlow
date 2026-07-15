@@ -7,11 +7,14 @@ namespace TaskFlow.API.Services
     {
         private readonly IRepository<Project> _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ProjectService(IRepository<Project> repository, IUnitOfWork unitOfWork)
+        public ProjectService(IRepository<Project> repository, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
+
         }
         public async Task<List<Project>> GetAllAsync()
         {
@@ -22,11 +25,11 @@ namespace TaskFlow.API.Services
         {
             return await _repository.GetByIdAsync(id);
         }
-        public async Task<Project> CreateAsync(Project task)
+        public async Task<Project> CreateAsync(Project project)
         {
-            await _repository.AddAsync(task);
+            await _repository.AddAsync(project);
             await _unitOfWork.SaveChangesAsync();
-            return task;
+            return project;
         }
 
         public async Task<bool> UpdateAsync(int id, Project project)

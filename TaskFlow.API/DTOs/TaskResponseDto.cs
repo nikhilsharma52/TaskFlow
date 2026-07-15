@@ -8,5 +8,7 @@
         public string Description { get; set; } = string.Empty;
 
         public bool IsCompleted { get; set; }
+
+        public int AssignedUserId { get; set; }
     }
 }
