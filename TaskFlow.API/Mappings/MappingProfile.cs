@@ -19,6 +19,10 @@ namespace TaskFlow.API.Mappings
             CreateMap<CreateProjectDto, Project>();
 
             CreateMap<UpdateProjectDto, Project>();
+
+            CreateMap<RegisterDto, User>();
+
+            CreateMap<User, AuthResponseDto>();
         }
     }
 }

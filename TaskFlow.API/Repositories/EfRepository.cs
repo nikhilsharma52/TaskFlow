@@ -7,7 +7,7 @@ namespace TaskFlow.API.Repositories
     {
 
         private readonly TaskFlowDbContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly DbSet<T> _dbSet;
 
         public EfRepository(TaskFlowDbContext context)
         {

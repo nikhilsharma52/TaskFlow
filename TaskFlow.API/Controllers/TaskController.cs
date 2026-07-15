@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.API.DTOs;
 using TaskFlow.API.Models;
@@ -6,6 +7,7 @@ using TaskFlow.API.Services;
 
 namespace TaskFlow.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TaskController : ControllerBase

@@ -1,118 +1,83 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskFlow.API.DTOs;
 using TaskFlow.API.Models;
+using TaskFlow.API.Services;
 
 namespace TaskFlow.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
 
-        private static List<Project> projects = new List<Project>
+        private readonly IProjectService _projectService;
+        private readonly IMapper _mapper;
+
+        public ProjectController(IProjectService projectService, IMapper mapper)
         {
-            new()
-            {
-                ProjectId = 1,
-                Name = "TaskFlow",
-                Description = "Task Management System"
-            },
-            new()
-            {
-                ProjectId = 2,
-                Name = "Library",
-                Description = "Library Management System"
-            }
-        };
+            _projectService = projectService;
+            _mapper = mapper;
+        }
 
         [HttpGet]
-        public IActionResult GetProjects()
+        public async Task<IActionResult> GetProjects()
         {
-            var response = projects.Select(project => new ProjectResponseDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description
-            });
+            var projects = await _projectService.GetAllAsync();
+            var response = _mapper.Map<IEnumerable<ProjectResponseDto>>(projects);
 
             return Ok(response);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetProjectById([FromRoute] int id)
+        public async Task<IActionResult> GetProjectById([FromRoute] int id)
         {
-            var project = projects.FirstOrDefault(p => p.ProjectId == id);
+            var project = await _projectService.GetByIdAsync(id);
 
             if (project == null) return NotFound();
 
-            var response = new ProjectResponseDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description
-            };
+            var response = _mapper.Map<ProjectResponseDto>(project);
 
             return Ok(response);
-        }
-
-        [HttpGet("search")]
-        public IActionResult SearchProjects([FromQuery] string name)
-        {
-            var matchingProjects = projects.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
-            if (!matchingProjects.Any()) return NotFound();
-            return Ok(matchingProjects);
         }
 
         [HttpPost]
-        public IActionResult CreateProject([FromBody]  CreateProjectDto dto)
+        public async Task<IActionResult> CreateProject([FromBody]  CreateProjectDto dto)
         {
-            var project = new Project
-            {
-                ProjectId = projects.Max(p => p.ProjectId) + 1,
-                Name = dto.Name,
-                Description = dto.Description
-            };
+            var project = _mapper.Map<Project>(dto);
 
-            projects.Add(project);
+            var createdProject = await _projectService.CreateAsync(project);
 
-            var response = new ProjectResponseDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description
-            };
+            var response = _mapper.Map<ProjectResponseDto>(createdProject);
 
-            return CreatedAtAction(nameof(GetProjectById), new { id = project.ProjectId }, response);
+            return CreatedAtAction(nameof(GetProjectById), new { id = createdProject.ProjectId }, response);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateProject(int id, [FromBody] UpdateProjectDto dto)
+        public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto dto)
         {
-            var project = projects.FirstOrDefault(p => p.ProjectId == id);
+            var existingProject = await _projectService.GetByIdAsync(id);
+            if (existingProject == null) return NotFound();
 
-            if (project == null) return NotFound();
+            _mapper.Map(dto, existingProject);
+            var updated = await _projectService.UpdateAsync(id, existingProject);
 
-            project.Name = dto.Name;
-            project.Description = dto.Description;
-
-            var response = new ProjectResponseDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description
-            };
+            if (!updated) return NotFound();
+            var response = _mapper.Map<ProjectResponseDto>(existingProject);
 
             return Ok(response);
+        
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteProject(int id)
+        public async Task<IActionResult> DeleteProject(int id)
         {
-            var project = projects.FirstOrDefault(p => p.ProjectId == id);
+            var deleted = await _projectService.DeleteAsync(id);
 
-            if (project == null) return NotFound();
+            if (!deleted) return NotFound();
 
-            projects.Remove(project);
             return NoContent();
         }
     }
