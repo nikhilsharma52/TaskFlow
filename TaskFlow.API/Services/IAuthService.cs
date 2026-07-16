@@ -6,5 +6,6 @@ namespace TaskFlow.API.Services
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
         Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
+        Task<bool> MakeAdminAsync(int id);
     }
 }

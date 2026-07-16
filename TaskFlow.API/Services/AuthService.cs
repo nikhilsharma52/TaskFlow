@@ -70,13 +70,28 @@ namespace TaskFlow.API.Services
             return response;   
         }
 
+        public async Task<bool> MakeAdminAsync(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+
+            if (user == null) return false;
+
+            if (user.Role == "Admin") return true;
+
+            user.Role = "Admin";
+            _userRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
         private string GenerateJwtToken(User user)
         {
             var claims = new List<Claim>()
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(JwtRegisteredClaimNames.Name, user.Name),
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskFlow.API.DTOs;
 using TaskFlow.API.Services;
 
@@ -27,6 +28,17 @@ namespace TaskFlow.API.Controllers
         {
             var response = await _authService.LoginAsync(loginDto);
             return Ok(response);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("make-admin/{id}")]
+        public async Task<IActionResult> MakeAdmin(int id)
+        {
+            var result = await _authService.MakeAdminAsync(id);
+
+            if (!result) return NotFound("User Not Found");
+
+            return Ok("User Promoted to Admin Successfully.");
         }
     }
 }
